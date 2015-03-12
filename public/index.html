@@ -1,0 +1,314 @@
+<!doctype html>
+<html>
+<head>
+<title>Common Assessments</title>
+<script src='underscore.min.js'></script>
+<script src='d3.min.js'></script>
+<!--
+<script src='nv.d3.js' type='text/javascript'></script>
+<link href='nv.d3.css' type='text/css' rel='stylesheet'>
+-->
+<style>
+body, td, th { font-family: 'Trebuchet MS'; }
+/* td.chart { border: solid 1px black; } */
+</style>
+</head>
+<body>
+<table>
+<tr>
+<th width='9%'>&nbsp;</th>
+<th width='13%'>ELA</th>
+<th width='13%'>History</th>
+<th width='13%'>Science</th>
+<th width='13%'>Math</th>
+<th width='13%'>Algebra</th>
+<th width='13%'>Spanish A</th>
+<th width='13%'>Spanish B</th>
+</tr>
+<tr>
+<td width='9%'>5th Grade</td>
+<td class='chart' width='13%'><div id='chart-5-1' class='with-3d-shadow with-transitions' /></td>
+<td width='13%'>&nbsp;</td>
+<td width='13%'>&nbsp;</td>
+<td class='chart' width='13%'><div id='chart-5-4' class='with-3d-shadow with-transitions' /></td>
+<td width='13%'>&nbsp;</td>
+<td width='13%'>&nbsp;</td>
+<td width='13%'>&nbsp;</td>
+</tr>
+<tr>
+<td width='9%'>6th Grade</td>
+<td class='chart' width='13%'><div id='chart-6-1' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-6-2' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-6-3' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-6-4' class='with-3d-shadow with-transitions' /></td>
+<td width='13%'>&nbsp;</td>
+<td width='13%'>&nbsp;</td>
+<td width='13%'>&nbsp;</td>
+</tr>
+<tr>
+<td width='9%'>7th Grade</td>
+<td class='chart' width='13%'><div id='chart-7-1' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-7-2' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-7-3' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-7-4' class='with-3d-shadow with-transitions' /></td>
+<td width='13%'>&nbsp;</td>
+<td class='chart' width='13%'><div id='chart-7-6' class='with-3d-shadow with-transitions' /></td>
+<td width='13%'>&nbsp;</td>
+</tr>
+<tr>
+<td width='9%'>8th Grade</td>
+<td class='chart' width='13%'><div id='chart-8-1' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-8-2' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-8-3' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-8-4' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-8-5' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-8-6' class='with-3d-shadow with-transitions' /></td>
+<td class='chart' width='13%'><div id='chart-8-7' class='with-3d-shadow with-transitions' /></td>
+</tr>
+</table>
+
+<script type='text/javascript'>
+
+function drawGraph(selector, label, data) {
+  var minvalq1 = 1000000,
+    maxvalq3 = 0,
+    sampsize = data.length,
+    slope = 0, 
+    barheight = 10,
+    i;
+
+  for (i = 0; i < sampsize; i++) {
+    maxvalq3 = Math.max(maxvalq3, data[i].q3);
+    minvalq1 = Math.min(minvalq1, data[i].q1);
+  }
+
+  maxvalq3 = Math.floor(maxvalq3) + 10;
+  minvalq1 = Math.floor(minvalq1) - 10;
+  maxvalq3 = 100.0;
+  minvalq1 =  60.0;
+
+  var w = 192,
+    h = 60,
+    labelpad = 16,
+    x = d3.scale.linear().domain([minvalq1, maxvalq3]).range([0, w - labelpad]),
+    y = d3.scale.ordinal().domain(d3.range(sampsize)).rangeBands([0, h], .2);
+    slope = (w - labelpad) / (maxvalq3 - minvalq1);
+
+  var vis = d3.select(selector)
+    .append('svg:svg')
+    .attr('width', w + 40)
+    .attr('height', h + 20)
+    .append('svg:g')
+    .attr('transform', 'translate(20,0)');
+
+  // Place a nice background
+  var rules = vis.selectAll('g.rule')
+    .data(x.ticks(5))
+    .enter().append('svg:g')
+    .attr('class', 'rule')
+    .attr('transform', function(d) { return 'translate(' + x(d) + ', 0)'; });
+
+  rules.append('svg:rect')
+    .attr('x', labelpad)
+    .attr('y', 0)
+    .attr('width', w - labelpad)
+    .attr('height', h)
+    .attr('fill', '#EEEEEE');
+
+  // Append Bars
+  var bars = vis.selectAll('g.bar')
+    .data(data)
+    .enter().append('svg:g')
+    .attr('class', 'bar')
+    .attr('transform', function(d, i) { return 'translate(' + labelpad + ',' + y(i) + ')'; });
+
+  bars.append('svg:rect')
+    .attr('fill', '#B5D045') 
+    .attr('x', function(d) { return x(d.q1 >= minvalq1 ? d.q1 : minvalq1); })
+    .attr('y', y.rangeBand() / 2 - barheight)
+    .attr('width', function(d) { return slope * (d.q3 - (d.q1 >= minvalq1 ? d.q1 : minvalq1)); })
+    .attr('height', y.rangeBand());
+
+  // draw median
+  bars.append('svg:line')
+    .attr('y1', y.rangeBand() / 2 - barheight)
+    .attr('y2', y.rangeBand() / 2 + barheight)
+    .attr('x1', function(d) { return x(d.q2); })
+    .attr('x2', function(d) { return x(d.q2); })
+    .attr('stroke', '#FB8335')
+    .attr('stroke-width', function(d) { return isNaN(d.q2) ? 0 : 3 })
+    .attr('stroke-opacity', 1);
+
+  rules.append('svg:line')
+    .attr('y1', h)
+    .attr('y2', h + 6)
+    .attr('x1', labelpad)
+    .attr('x2', labelpad)
+    .attr('stroke', '#CCCCCC');
+
+  rules.append('svg:line')
+    .attr('y1', 0)
+    .attr('y2', h)
+    .attr('x1', labelpad)
+    .attr('x2', labelpad)
+    .attr('stroke', '#444444');
+    //.attr('stroke-opacity', 1.5);
+
+  bars.append('svg:text')
+    .attr('x', 0)
+    .attr('y', y.rangeBand() / 2)
+    .attr('dx', -6)
+    .attr('dy', '.35em')
+    .attr('style', 'font-size: 12px;')
+    .attr('text-anchor', 'end')
+    .text(function(d) { return d.label; });
+
+  bars.append('svg:text')
+    .attr('x', 0)
+    .attr('y', y.rangeBand() / 2)
+    .attr('dx', 6)
+    .attr('dy', '.35em')
+    .attr('style', 'font-size: 12px;')
+    .attr('text-anchor', 'start')
+    .text(function(d) { return 'n=' + d.scores.length; });
+
+  rules.append('svg:text')
+    .attr('y', h + 8)
+    .attr('x', labelpad)
+    .attr('dy', '.71em')
+    .attr('style', 'font-size: 12px;')
+    .attr('text-anchor', 'middle')
+    .text(x.tickFormat(10));
+}
+
+/* 
+Course_Title
+Course_Code
+Section_Number
+Section_Term
+Section_Teacher
+Asmt_ID
+Asmt_Term
+Asmt_Date
+Asmt_Name
+Asmt_Points
+Score_Points
+Student_Number
+SSID
+First_Name
+Last_Name
+Grade_Level
+Score_ID
+*/
+
+var subjectsByCourse = {
+  '5102': 'Math',
+  '5202': 'ELA',
+  '6100': 'Math',
+  '6200': 'History',
+  '6400': 'Science',
+  '6600': 'ELA',
+  '7100': 'Math',
+  '7177': 'Math',
+  '7200': 'History',
+  '7210': 'History',
+  '7400': 'Science',
+  '7410': 'Science',
+  '7600': 'ELA',
+  '7808': 'Spanish A',
+  '7809': 'Spanish A',
+  '8102': 'Math',
+  '8128': 'Algebra',
+  '8200': 'History',
+  '8400': 'Science',
+  '8600': 'ELA',
+  '8808': 'Spanish B'
+};
+
+var subjectsByGrade = {
+  '5': { label: '5th Grade', subjects: 
+    { 'ELA': '1', 'Math': '4' } },
+  '6': { label: '6th Grade', subjects: 
+    { 'ELA': '1', 'History': '2', 'Science': '3', 'Math': '4' } },
+  '7': { label: '7th Grade', subjects: 
+    { 'ELA': '1', 'History': '2', 'Science': '3', 'Math': '4', 'Spanish A': '6' } },
+  '8': { label: '8th Grade', subjects: 
+    { 'ELA': '1', 'History': '2', 'Science': '3', 'Math': '4', 'Algebra': '5', 'Spanish A': '6', 'Spanish B': '7' } }
+};
+
+function convertRow(d) {
+  var subj = subjectsByCourse[d.Course_Code];
+  return {
+    assessment: subj + ':' + d.Grade_Level + ':' + d.Asmt_Term,
+    subject: subj,
+    term: d.Asmt_Term,
+    grade: +d.Grade_Level,
+    score: +d.Score_Points,
+    possible: +d.Asmt_Points,
+    pct: 100.0 * (+d.Score_Points) / (+d.Asmt_Points) 
+  };
+}
+
+function analyzeData(d) {
+  var termsInData = { };
+  var groups = _.groupBy(d, 'assessment');
+  var assessments = _.map(groups, function(rows, key) {
+    var parts = key.split(':');
+    var term = parts[2];
+    if ('undefined' != term) { termsInData[term] = 1; }
+    var scores = _.map(rows, function(row, i) { return row.pct });
+    scores.sort(function(a, b) { return a-b } );
+    var q1 = d3.quantile(scores, 0.25);
+    var q2 = d3.quantile(scores, 0.5);
+    var q3 = d3.quantile(scores, 0.75);
+    var r = q3 - q1;
+    return { 
+      label:   term, 
+      subject: parts[0], 
+      grade:   parts[1], 
+      term:    term,
+      scores:  scores,
+      data:    rows,
+      q1:      q1,
+      q2:      q2,
+      q3:      q3
+    };
+  });
+  var terms = _.keys(termsInData);
+  terms.sort();
+
+  assessments = _.filter(assessments, function(asmt) { return !isNaN( asmt.q2 ) });
+  var byGrade = _.groupBy(assessments, 'grade');
+  _.each(byGrade, function(gradeAsmts, grade) {
+    var bySubject = _.groupBy(gradeAsmts, 'subject');
+    _.each(bySubject, function(subjectAsmts, subject) {
+      _.each(terms, function(term) {
+        if (!_.some(subjectAsmts, function(asmt) { return asmt.term == term })) {
+          var empty = { 
+            label:   term,
+            subject: subject,
+            grade:   grade,
+            term:    term,
+            scores:  [ ],
+            data:    [ ],
+            q1:      NaN,
+            q2:      NaN,
+            q3:      NaN
+          }
+          subjectAsmts.push(empty);
+        }
+      });
+      subjectAsmts.sort(function(a, b) { return a.term > b.term ? 1 : -1 });
+      var i = subjectsByGrade[grade].subjects[subject];
+      var selector = '#chart-' + grade + '-' + i;
+      drawGraph(selector, subject, subjectAsmts);
+    });
+  });
+}
+
+d3.csv('./data/cascores.csv', convertRow, analyzeData);
+
+</script>
+</script>
+</body>
+</html>
